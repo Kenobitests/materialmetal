@@ -20,6 +20,11 @@
             cursor: pointer;
             border: 2px solid white;
         }
+        .option-btn.active {
+            background-color: #3b82f6;
+            border-color: #60a5fa;
+            color: white;
+        }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
@@ -80,6 +85,27 @@
             </div>
         </section>
 
+        <!-- Questionário de Validação -->
+        <section class="glass-panel border border-slate-800 p-5 rounded-3xl shadow-2xl mb-6">
+            <h3 class="text-white text-[10px] font-bold uppercase mb-4 tracking-widest flex items-center gap-2">
+                <i class="fas fa-microscope text-purple-400"></i> Filtros de Validação
+            </h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <p class="text-[9px] text-slate-500 uppercase mb-2 font-bold">O objeto é atraído por imã?</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setMagnetic(true)" id="mag-yes" class="option-btn py-2 rounded-xl border border-slate-700 text-[10px] uppercase font-bold text-slate-400 hover:border-slate-500 transition-all">
+                            <i class="fas fa-magnet mr-1"></i> Sim
+                        </button>
+                        <button onclick="setMagnetic(false)" id="mag-no" class="option-btn py-2 rounded-xl border border-slate-700 text-[10px] uppercase font-bold text-slate-400 hover:border-slate-500 transition-all">
+                            <i class="fas fa-times mr-1"></i> Não
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Results Display -->
         <div id="results-area" class="hidden space-y-6">
             
@@ -93,12 +119,12 @@
                     <p class="text-[8px] text-blue-200 uppercase font-bold">g/cm³</p>
                     <i class="fas fa-weight-hanging absolute -right-2 -bottom-2 text-4xl opacity-10"></i>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl relative overflow-hidden">
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl relative overflow-hidden border-l-4 border-l-green-500">
                     <p class="text-[9px] font-bold uppercase text-slate-500">Confiança Máxima</p>
                     <div class="flex items-baseline gap-1">
                         <span id="top-prob-val" class="text-3xl font-black text-green-400">0%</span>
                     </div>
-                    <p id="top-metal-name" class="text-[8px] text-slate-400 uppercase font-bold truncate">---</p>
+                    <p id="top-metal-name" class="text-[8px] text-slate-400 uppercase font-bold truncate tracking-tighter">---</p>
                 </div>
             </div>
 
@@ -143,32 +169,46 @@
 
     <script>
         const METALS_DB = [
-            { name: 'Magnésio', density: 1.74, color: '#94a3b8' },
-            { name: 'Alumínio', density: 2.70, color: '#38bdf8' },
-            { name: 'Titânio', density: 4.54, color: '#818cf8' },
-            { name: 'Zinco', density: 7.14, color: '#94a3b8' },
-            { name: 'Estanho', density: 7.31, color: '#64748b' },
-            { name: 'Ferro', density: 7.87, color: '#f97316' },
-            { name: 'Aço', density: 8.00, color: '#78350f' },
-            { name: 'Níquel', density: 8.90, color: '#94a3b8' },
-            { name: 'Cobre', density: 8.96, color: '#f97316' },
-            { name: 'Latão', density: 8.50, color: '#eab308' },
-            { name: 'Prata', density: 10.49, color: '#cbd5e1' },
-            { name: 'Chumbo', density: 11.34, color: '#475569' },
-            { name: 'Paládio', density: 12.02, color: '#cbd5e1' },
-            { name: 'Ouro 10k', density: 11.57, color: '#d97706' },
-            { name: 'Ouro 14k', density: 13.07, color: '#ea580c' },
-            { name: 'Ouro 18k (Amarelo)', density: 15.58, color: '#f59e0b' },
-            { name: 'Ouro 18k (Branco)', density: 14.65, color: '#cbd5e1' },
-            { name: 'Ouro 22k', density: 17.75, color: '#fbbf24' },
-            { name: 'Ouro 24k (Puro)', density: 19.32, color: '#fcd34d' },
-            { name: 'Tungstênio', density: 19.25, color: '#334155' },
-            { name: 'Platina', density: 21.45, color: '#f8fafc' },
-            { name: 'Iridio', density: 22.56, color: '#f1f5f9' }
+            { name: 'Magnésio', density: 1.74, color: '#94a3b8', magnetic: false },
+            { name: 'Alumínio', density: 2.70, color: '#38bdf8', magnetic: false },
+            { name: 'Titânio', density: 4.54, color: '#818cf8', magnetic: false },
+            { name: 'Zinco', density: 7.14, color: '#94a3b8', magnetic: false },
+            { name: 'Estanho', density: 7.31, color: '#64748b', magnetic: false },
+            { name: 'Ferro', density: 7.87, color: '#f97316', magnetic: true },
+            { name: 'Aço', density: 8.00, color: '#78350f', magnetic: true },
+            { name: 'Níquel', density: 8.90, color: '#94a3b8', magnetic: true },
+            { name: 'Cobre', density: 8.96, color: '#f97316', magnetic: false },
+            { name: 'Latão', density: 8.50, color: '#eab308', magnetic: false },
+            { name: 'Prata', density: 10.49, color: '#cbd5e1', magnetic: false },
+            { name: 'Chumbo', density: 11.34, color: '#475569', magnetic: false },
+            { name: 'Paládio', density: 12.02, color: '#cbd5e1', magnetic: false },
+            { name: 'Ouro 10k', density: 11.57, color: '#d97706', magnetic: false },
+            { name: 'Ouro 14k', density: 13.07, color: '#ea580c', magnetic: false },
+            { name: 'Ouro 18k (Amarelo)', density: 15.58, color: '#f59e0b', magnetic: false },
+            { name: 'Ouro 18k (Branco)', density: 14.65, color: '#cbd5e1', magnetic: false },
+            { name: 'Ouro 22k', density: 17.75, color: '#fbbf24', magnetic: false },
+            { name: 'Ouro 24k (Puro)', density: 19.32, color: '#fcd34d', magnetic: false },
+            { name: 'Tungstênio', density: 19.25, color: '#334155', magnetic: false },
+            { name: 'Platina', density: 21.45, color: '#f8fafc', magnetic: false },
+            { name: 'Iridio', density: 22.56, color: '#f1f5f9', magnetic: false }
         ];
 
         let probChart = null;
         let scatterChart = null;
+        let isMagnetic = null; // null = ignorar, true/false = filtrar
+
+        function setMagnetic(val) {
+            if (isMagnetic === val) {
+                isMagnetic = null;
+                document.getElementById('mag-yes').classList.remove('active');
+                document.getElementById('mag-no').classList.remove('active');
+            } else {
+                isMagnetic = val;
+                document.getElementById('mag-yes').classList.toggle('active', val === true);
+                document.getElementById('mag-no').classList.toggle('active', val === false);
+            }
+            update();
+        }
 
         function getProb(x, mean, std) {
             return (1 / (std * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / std, 2));
@@ -193,8 +233,19 @@
             const densityExp = air / water;
             document.getElementById('density-val').innerText = densityExp.toFixed(3);
 
+            // Cálculo das Probabilidades com Filtro Magnético
             const chances = METALS_DB.map(m => {
-                const p = getProb(m.density, densityExp, precision);
+                let p = getProb(m.density, densityExp, precision);
+                
+                // Lógica de Filtro: Se o usuário definiu magnetismo, zera o que não bate
+                if (isMagnetic !== null) {
+                    if (m.magnetic !== isMagnetic) {
+                        p = 0; // Se não coincide com o teste físico, probabilidade é descartada
+                    } else {
+                        p *= 2; // Dá um "boost" nos que coincidem
+                    }
+                }
+                
                 return { ...m, probRaw: p };
             });
 
@@ -204,9 +255,11 @@
                 chance: sumProb > 0 ? (m.probRaw / sumProb) * 100 : 0
             })).sort((a, b) => b.chance - a.chance);
 
-            document.getElementById('top-prob-val').innerText = normalized[0].chance.toFixed(1) + '%';
-            document.getElementById('top-metal-name').innerText = normalized[0].name;
+            const topMatch = normalized[0];
+            document.getElementById('top-prob-val').innerText = topMatch.chance.toFixed(1) + '%';
+            document.getElementById('top-metal-name').innerText = topMatch.chance > 0 ? topMatch.name : "Nenhuma correspondência";
 
+            // Ranking
             const list = document.getElementById('ranking-list');
             list.innerHTML = '';
             normalized.filter(m => m.chance > 0.1).forEach(m => {
@@ -216,7 +269,7 @@
                     <div class="w-1 h-6 rounded" style="background:${m.color}"></div>
                     <div class="flex-1">
                         <div class="flex justify-between text-[9px] font-bold text-white uppercase mb-1">
-                            <span>${m.name}</span>
+                            <span>${m.name} ${m.magnetic ? '<i class="fas fa-magnet text-blue-400 text-[7px]"></i>' : ''}</span>
                             <span class="text-blue-400 font-mono">${m.chance.toFixed(1)}%</span>
                         </div>
                         <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
@@ -227,6 +280,7 @@
                 list.appendChild(div);
             });
 
+            // Gráfico Curva
             const curveLabels = [];
             const curveData = [];
             const startX = Math.max(0, densityExp - 5);
@@ -262,11 +316,13 @@
                 }
             });
 
+            // Gráfico Dispersão
             const scatterPoints = METALS_DB.map(m => ({
                 x: m.density,
                 y: normalized.find(n => n.name === m.name).chance,
                 name: m.name,
-                color: m.color
+                color: m.color,
+                isMatch: (isMagnetic === null || m.magnetic === isMagnetic) && normalized.find(n => n.name === m.name).chance > 1
             }));
 
             if (scatterChart) scatterChart.destroy();
@@ -276,9 +332,9 @@
                     datasets: [{
                         label: 'Metais Conhecidos',
                         data: scatterPoints,
-                        backgroundColor: scatterPoints.map(p => p.color),
-                        pointRadius: 6,
-                        pointHoverRadius: 8
+                        backgroundColor: scatterPoints.map(p => p.isMatch ? p.color : '#1e293b'),
+                        pointRadius: scatterPoints.map(p => p.isMatch ? 7 : 4),
+                        pointHoverRadius: 9
                     }]
                 },
                 options: {
