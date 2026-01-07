@@ -30,7 +30,7 @@
     <header class="p-4 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-[#020617] z-50">
         <div>
             <h1 class="text-blue-500 text-[10px] font-bold tracking-[0.2em] uppercase leading-none">
-                <i class="fas fa-atom animate-spin-slow"></i> Lab-Mobile v4.0
+                <i class="fas fa-atom animate-spin-slow"></i> Lab-Mobile v4.5
             </h1>
             <h2 class="text-lg font-light text-white italic">Arquimedes Analyzer</h2>
         </div>
@@ -118,7 +118,7 @@
                 </div>
             </div>
 
-            <!-- Scatter Plot (O Gráfico que você queria) -->
+            <!-- Scatter Plot -->
             <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl">
                 <p class="text-[9px] text-slate-500 uppercase mb-4 font-bold text-center">Mapa de Densidade de Metais</p>
                 <div class="h-56">
@@ -150,18 +150,26 @@
             { name: 'Estanho', density: 7.31, color: '#64748b' },
             { name: 'Ferro', density: 7.87, color: '#f97316' },
             { name: 'Aço', density: 8.00, color: '#78350f' },
-            { name: 'Latão', density: 8.50, color: '#eab308' },
+            { name: 'Níquel', density: 8.90, color: '#94a3b8' },
             { name: 'Cobre', density: 8.96, color: '#f97316' },
+            { name: 'Latão', density: 8.50, color: '#eab308' },
             { name: 'Prata', density: 10.49, color: '#cbd5e1' },
             { name: 'Chumbo', density: 11.34, color: '#475569' },
-            { name: 'Ouro', density: 19.32, color: '#fbbf24' },
-            { name: 'Platina', density: 21.45, color: '#f8fafc' }
+            { name: 'Paládio', density: 12.02, color: '#cbd5e1' },
+            { name: 'Ouro 10k', density: 11.57, color: '#d97706' },
+            { name: 'Ouro 14k', density: 13.07, color: '#ea580c' },
+            { name: 'Ouro 18k (Amarelo)', density: 15.58, color: '#f59e0b' },
+            { name: 'Ouro 18k (Branco)', density: 14.65, color: '#cbd5e1' },
+            { name: 'Ouro 22k', density: 17.75, color: '#fbbf24' },
+            { name: 'Ouro 24k (Puro)', density: 19.32, color: '#fcd34d' },
+            { name: 'Tungstênio', density: 19.25, color: '#334155' },
+            { name: 'Platina', density: 21.45, color: '#f8fafc' },
+            { name: 'Iridio', density: 22.56, color: '#f1f5f9' }
         ];
 
         let probChart = null;
         let scatterChart = null;
 
-        // Função de Densidade de Probabilidade (Distribuição Normal)
         function getProb(x, mean, std) {
             return (1 / (std * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / std, 2));
         }
@@ -182,12 +190,9 @@
             document.getElementById('results-area').classList.remove('hidden');
             document.getElementById('placeholder').classList.add('hidden');
 
-            // CÁLCULO FÍSICO (Princípio de Arquimedes)
-            // Densidade Experimental = Peso Ar / Empuxo (Peso da água deslocada)
             const densityExp = air / water;
             document.getElementById('density-val').innerText = densityExp.toFixed(3);
 
-            // Cálculo das Probabilidades Relativas
             const chances = METALS_DB.map(m => {
                 const p = getProb(m.density, densityExp, precision);
                 return { ...m, probRaw: p };
@@ -199,11 +204,9 @@
                 chance: sumProb > 0 ? (m.probRaw / sumProb) * 100 : 0
             })).sort((a, b) => b.chance - a.chance);
 
-            // Atualiza Top Match
             document.getElementById('top-prob-val').innerText = normalized[0].chance.toFixed(1) + '%';
             document.getElementById('top-metal-name').innerText = normalized[0].name;
 
-            // Atualiza Lista (Ranking)
             const list = document.getElementById('ranking-list');
             list.innerHTML = '';
             normalized.filter(m => m.chance > 0.1).forEach(m => {
@@ -224,11 +227,10 @@
                 list.appendChild(div);
             });
 
-            // --- GRÁFICO DE CURVA (PROBABILIDADE) ---
             const curveLabels = [];
             const curveData = [];
-            const startX = Math.max(0, densityExp - 4);
-            const endX = densityExp + 4;
+            const startX = Math.max(0, densityExp - 5);
+            const endX = densityExp + 5;
             for(let i = startX; i <= endX; i += 0.15) {
                 curveLabels.push(i.toFixed(1));
                 curveData.push(getProb(i, densityExp, precision));
@@ -260,7 +262,6 @@
                 }
             });
 
-            // --- GRÁFICO DE DISPERSÃO (O MAPA DE METAIS) ---
             const scatterPoints = METALS_DB.map(m => ({
                 x: m.density,
                 y: normalized.find(n => n.name === m.name).chance,
