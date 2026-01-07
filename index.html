@@ -1,0 +1,285 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  ScatterChart, Scatter, ZAxis, Cell, Legend
+} from 'recharts';
+import { Beaker, Droplets, Target, Activity, AlertCircle, Info } from 'lucide-react';
+
+const METALS_DB = [
+  { name: 'Magnésio', density: 1.74, color: '#e2e8f0' },
+  { name: 'Alumínio', density: 2.70, color: '#94a3b8' },
+  { name: 'Titânio', density: 4.54, color: '#64748b' },
+  { name: 'Zinco', density: 7.14, color: '#475569' },
+  { name: 'Estanho', density: 7.31, color: '#334155' },
+  { name: 'Ferro', density: 7.87, color: '#b45309' },
+  { name: 'Aço', density: 8.00, color: '#78350f' },
+  { name: 'Latão', density: 8.50, color: '#ca8a04' },
+  { name: 'Cobre', density: 8.96, color: '#ea580c' },
+  { name: 'Prata', density: 10.49, color: '#cbd5e1' },
+  { name: 'Chumbo', density: 11.34, color: '#1e293b' },
+  { name: 'Ouro', density: 19.32, color: '#fbbf24' },
+  { name: 'Platina', density: 21.45, color: '#f8fafc' },
+];
+
+const App = () => {
+  const [wAir, setWAir] = useState('');
+  const [wWaterDisplaced, setWWaterDisplaced] = useState('');
+  const [precision, setPrecision] = useState(0.15); // Desvio padrão padrão
+
+  const stats = useMemo(() => {
+    const air = parseFloat(wAir);
+    const water = parseFloat(wWaterDisplaced);
+
+    if (!air || !water || air <= 0 || water <= 0) return null;
+
+    // FÓRMULA CORRETA (Princípio de Arquimedes)
+    // Densidade Relativa = Peso no Ar / Peso da Água Deslocada
+    const densityExp = air / water;
+    
+    // Função de Densidade de Probabilidade (Normal/Gaussiana)
+    const getProb = (x, mean, std) => {
+      return (1 / (std * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / std, 2));
+    };
+
+    // Gerar dados para o gráfico de curva (Bell Curve)
+    const plotData = [];
+    const minX = Math.max(0, densityExp - 5);
+    const maxX = densityExp + 5;
+    
+    for (let x = minX; x <= maxX; x += 0.2) {
+      plotData.push({
+        x: parseFloat(x.toFixed(2)),
+        prob: getProb(x, densityExp, precision)
+      });
+    }
+
+    // Calcular chances para cada metal
+    const chances = METALS_DB.map(m => {
+      const p = getProb(m.density, densityExp, precision);
+      return { ...m, probRaw: p };
+    });
+
+    const sumProb = chances.reduce((a, b) => a + b.probRaw, 0);
+    const normalized = chances.map(m => ({
+      ...m,
+      chance: sumProb > 0 ? (m.probRaw / sumProb) * 100 : 0
+    })).sort((a, b) => b.chance - a.chance);
+
+    return {
+      densityExp,
+      plotData,
+      topMatches: normalized.filter(m => m.chance > 0.1),
+      scatterData: normalized.map(m => ({ name: m.name, x: m.density, y: m.chance, color: m.color }))
+    };
+  }, [wAir, wWaterDisplaced, precision]);
+
+  return (
+    <div className="min-h-screen bg-[#0f172a] text-slate-200 p-4 md:p-8 font-mono">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header Estilo Lab */}
+        <div className="border-b border-slate-800 pb-6 mb-8 flex flex-col md:flex-row justify-between items-end gap-4">
+          <div>
+            <h1 className="text-blue-500 text-sm font-bold tracking-widest uppercase mb-1 flex items-center gap-2">
+              <Activity className="w-4 h-4" /> Lab-System v2.0
+            </h1>
+            <h2 className="text-3xl font-light text-white italic">Análise de Densidade Hidrostática</h2>
+          </div>
+          <div className="bg-slate-900 px-4 py-2 rounded border border-slate-800 text-xs">
+            STATUS: <span className="text-green-500 animate-pulse">PRONTO PARA MEDIÇÃO</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* PAINEL DE CONTROLE (ESQUERDA) */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-lg shadow-2xl">
+              <h3 className="text-white text-sm font-bold uppercase mb-6 flex items-center gap-2">
+                <Beaker className="w-4 h-4 text-blue-400" /> Inputs de Bancada
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="relative">
+                  <label className="text-[10px] text-slate-500 uppercase block mb-2">Peso do Objeto (Ar)</label>
+                  <input 
+                    type="number"
+                    value={wAir}
+                    onChange={e => setWAir(e.target.value)}
+                    className="w-full bg-black border border-slate-700 p-4 text-2xl text-blue-400 outline-none focus:border-blue-500 transition-all"
+                    placeholder="0.00g"
+                  />
+                </div>
+
+                <div className="relative">
+                  <label className="text-[10px] text-slate-500 uppercase block mb-2">Peso da Água Deslocada</label>
+                  <input 
+                    type="number"
+                    value={wWaterDisplaced}
+                    onChange={e => setWWaterDisplaced(e.target.value)}
+                    className="w-full bg-black border border-slate-700 p-4 text-2xl text-cyan-400 outline-none focus:border-cyan-500 transition-all"
+                    placeholder="0.00g"
+                  />
+                  <div className="mt-2 text-[10px] text-slate-500 flex items-center gap-1 italic">
+                    <Info className="w-3 h-3" /> Peso da água que transbordou ou diferença de peso.
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800">
+                  <label className="text-[10px] text-slate-500 uppercase block mb-4">Ajuste de Tolerância Experimental</label>
+                  <input 
+                    type="range" min="0.05" max="0.5" step="0.01"
+                    value={precision}
+                    onChange={e => setPrecision(parseFloat(e.target.value))}
+                    className="w-full accent-blue-600 bg-slate-800 h-1 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[9px] mt-2 text-slate-400">
+                    <span>ALTA PRECISÃO (±0.05)</span>
+                    <span>RUÍDO ALTO (±0.50)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {stats && (
+              <div className="bg-blue-600 text-white p-6 rounded-lg shadow-lg relative overflow-hidden">
+                <div className="relative z-10">
+                  <p className="text-[10px] font-bold uppercase opacity-80 mb-1">Densidade Experimental</p>
+                  <p className="text-5xl font-black">{stats.densityExp.toFixed(3)}</p>
+                  <p className="text-xs mt-1 opacity-80 font-bold uppercase">g/cm³</p>
+                </div>
+                <Droplets className="absolute -right-4 -bottom-4 w-32 h-32 opacity-20 rotate-12" />
+              </div>
+            )}
+          </div>
+
+          {/* PAINEL GRÁFICO (DIREITA) */}
+          <div className="lg:col-span-8 space-y-6">
+            {!stats ? (
+              <div className="h-full min-h-[500px] flex items-center justify-center border border-slate-800 rounded-lg bg-slate-900/50">
+                <div className="text-center">
+                  <AlertCircle className="w-12 h-12 text-slate-700 mx-auto mb-4" />
+                  <p className="text-slate-500 uppercase text-xs tracking-widest">Aguardando telemetria de entrada...</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Gráfico de Curva Gaussiana */}
+                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-lg">
+                    <h4 className="text-[10px] text-slate-500 uppercase mb-4 font-bold flex items-center gap-2">
+                      <Target className="w-3 h-3 text-blue-400" /> Curva de Probabilidade (Normal)
+                    </h4>
+                    <div className="h-[250px] w-full">
+                      <ResponsiveContainer>
+                        <AreaChart data={stats.plotData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                          <XAxis dataKey="x" stroke="#475569" fontSize={10} />
+                          <YAxis hide />
+                          <Tooltip 
+                            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', fontSize: '10px' }}
+                            itemStyle={{ color: '#60a5fa' }}
+                          />
+                          <Area type="monotone" dataKey="prob" stroke="#3b82f6" fillOpacity={0.3} fill="#3b82f6" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Lista de Probabilidades */}
+                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-lg overflow-y-auto max-h-[290px]">
+                    <h4 className="text-[10px] text-slate-500 uppercase mb-4 font-bold">Ranking de Probabilidade</h4>
+                    <div className="space-y-3">
+                      {stats.topMatches.map((m, idx) => (
+                        <div key={idx} className="flex items-center gap-4 bg-black/40 p-3 rounded border border-slate-800/50">
+                          <div className="w-2 h-10 rounded" style={{ backgroundColor: m.color }} />
+                          <div className="flex-1">
+                            <div className="flex justify-between items-baseline">
+                              <span className="text-xs font-bold text-white uppercase">{m.name}</span>
+                              <span className="text-[10px] text-slate-400">ρ: {m.density}</span>
+                            </div>
+                            <div className="w-full bg-slate-800 h-1.5 mt-1 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-blue-500 transition-all duration-1000" 
+                                style={{ width: `${m.chance}%` }} 
+                              />
+                            </div>
+                          </div>
+                          <span className="text-blue-400 font-bold text-xs w-10 text-right">{m.chance.toFixed(1)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gráfico de Dispersão */}
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-lg">
+                  <h4 className="text-[10px] text-slate-500 uppercase mb-6 font-bold">Mapa de Materiais vs Confiança</h4>
+                  <div className="h-[250px] w-full">
+                    <ResponsiveContainer>
+                      <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                        <XAxis 
+                          type="number" 
+                          dataKey="x" 
+                          name="Densidade" 
+                          unit=" g/cm³" 
+                          stroke="#475569" 
+                          fontSize={10} 
+                          domain={[0, 22]}
+                        />
+                        <YAxis 
+                          type="number" 
+                          dataKey="y" 
+                          name="Chance" 
+                          unit="%" 
+                          stroke="#475569" 
+                          fontSize={10} 
+                        />
+                        <ZAxis type="number" range={[100, 500]} />
+                        <Tooltip 
+                          cursor={{ strokeDasharray: '3 3' }}
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                                <div className="bg-slate-900 border border-slate-700 p-2 text-[10px]">
+                                  <p className="text-white font-bold">{data.name}</p>
+                                  <p className="text-blue-400">Chance: {data.y.toFixed(2)}%</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Scatter name="Metais" data={stats.scatterData}>
+                          {stats.scatterData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" strokeWidth={0.5} />
+                          ))}
+                        </Scatter>
+                        {/* Linha da Medição Atual */}
+                        <Scatter 
+                          data={[{ x: stats.densityExp, y: 100 }]} 
+                          shape={(props) => (
+                            <line x1={props.cx} y1={0} x2={props.cx} y2={300} stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" />
+                          )} 
+                        />
+                      </ScatterChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-[9px] text-slate-500 mt-4 text-center">
+                    A linha tracejada azul representa sua medição atual ({stats.densityExp.toFixed(2)}). 
+                    Os pontos representam os metais conhecidos no banco de dados.
+                  </p>
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
