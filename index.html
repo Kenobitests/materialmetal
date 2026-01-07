@@ -10,57 +10,69 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap');
         body { font-family: 'JetBrains Mono', monospace; }
-        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); }
+        .glass-panel { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
+            height: 18px;
+            width: 18px;
             border-radius: 50%;
             background: #3b82f6;
             cursor: pointer;
+            border: 2px solid white;
         }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-[#0f172a] text-slate-200 min-h-screen">
+<body class="bg-[#020617] text-slate-200 min-h-screen">
 
     <!-- Header -->
-    <header class="p-6 border-b border-slate-800 flex justify-between items-center">
+    <header class="p-4 border-b border-slate-800 flex justify-between items-center sticky top-0 bg-[#020617] z-50">
         <div>
-            <h1 class="text-blue-500 text-[10px] font-bold tracking-tighter uppercase leading-none">
-                <i class="fas fa-microchip"></i> System-Mobile v3.0
+            <h1 class="text-blue-500 text-[10px] font-bold tracking-[0.2em] uppercase leading-none">
+                <i class="fas fa-atom animate-spin-slow"></i> Lab-Mobile v4.0
             </h1>
-            <h2 class="text-xl font-light text-white italic">Arquimedes Lab</h2>
+            <h2 class="text-lg font-light text-white italic">Arquimedes Analyzer</h2>
         </div>
-        <div id="status-tag" class="text-[9px] bg-slate-900 border border-slate-700 px-2 py-1 rounded text-green-500 animate-pulse">
-            ONLINE
+        <div class="flex flex-col items-end">
+            <span class="text-[8px] text-slate-500 uppercase">Status do Sistema</span>
+            <div id="status-tag" class="text-[9px] font-bold text-green-500 flex items-center gap-1">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span> OPERACIONAL
+            </div>
         </div>
     </header>
 
-    <main class="p-4 max-w-lg mx-auto pb-24">
+    <main class="p-4 max-w-lg mx-auto pb-10">
         
-        <!-- Input Card -->
-        <section class="glass-panel border border-slate-800 p-5 rounded-2xl shadow-2xl mb-6">
-            <h3 class="text-white text-xs font-bold uppercase mb-4 flex items-center gap-2">
-                <i class="fas fa-flask text-blue-400"></i> Calibração de Amostra
+        <!-- Input Section -->
+        <section class="glass-panel border border-slate-800 p-5 rounded-3xl shadow-2xl mb-6">
+            <h3 class="text-white text-[10px] font-bold uppercase mb-5 tracking-widest flex items-center gap-2">
+                <i class="fas fa-sliders-h text-blue-400"></i> Parâmetros de Entrada
             </h3>
             
-            <div class="space-y-5">
-                <div>
-                    <label class="text-[10px] text-slate-500 uppercase block mb-1">Peso no Ar (g)</label>
-                    <input id="wAir" type="number" step="0.01" placeholder="0.00" 
-                           class="w-full bg-black border border-slate-700 p-3 text-xl text-blue-400 rounded-lg outline-none focus:border-blue-500">
+            <div class="space-y-4">
+                <div class="bg-black/40 p-3 rounded-xl border border-slate-800">
+                    <label class="text-[9px] text-slate-500 uppercase block mb-1">Peso no Ar (Massa)</label>
+                    <div class="flex items-center gap-2">
+                        <input id="wAir" type="number" step="0.01" placeholder="0.00" 
+                               class="w-full bg-transparent text-2xl text-blue-400 outline-none font-bold">
+                        <span class="text-slate-600 text-xs">g</span>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="text-[10px] text-slate-500 uppercase block mb-1">Peso da Água Deslocada (g)</label>
-                    <input id="wWater" type="number" step="0.01" placeholder="0.00"
-                           class="w-full bg-black border border-slate-700 p-3 text-xl text-cyan-400 rounded-lg outline-none focus:border-cyan-500">
+                <div class="bg-black/40 p-3 rounded-xl border border-slate-800">
+                    <label class="text-[9px] text-slate-500 uppercase block mb-1">Peso da Água Deslocada (Empuxo)</label>
+                    <div class="flex items-center gap-2">
+                        <input id="wWater" type="number" step="0.01" placeholder="0.00"
+                               class="w-full bg-transparent text-2xl text-cyan-400 outline-none font-bold">
+                        <span class="text-slate-600 text-xs">g</span>
+                    </div>
                 </div>
 
-                <div class="pt-2">
-                    <div class="flex justify-between text-[9px] mb-2 uppercase font-bold text-slate-500">
-                        <span>Precisão</span>
-                        <span id="precision-val">±0.15</span>
+                <div class="pt-2 px-1">
+                    <div class="flex justify-between text-[9px] mb-3 uppercase font-bold text-slate-500">
+                        <span>Tolerância de Erro (σ)</span>
+                        <span id="precision-val" class="text-blue-400">±0.15</span>
                     </div>
                     <input id="precision" type="range" min="0.05" max="0.5" step="0.01" value="0.15" 
                            class="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer">
@@ -68,58 +80,88 @@
             </div>
         </section>
 
-        <!-- Result Display -->
+        <!-- Results Display -->
         <div id="results-area" class="hidden space-y-6">
-            <div class="bg-blue-600 p-5 rounded-2xl shadow-lg flex justify-between items-center overflow-hidden relative">
-                <div class="relative z-10">
-                    <p class="text-[10px] font-bold uppercase opacity-80">Densidade Relativa</p>
-                    <p id="density-val" class="text-4xl font-black">0.000</p>
-                    <p class="text-[10px] opacity-80">g/cm³</p>
+            
+            <!-- Density Hero -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-blue-600 p-4 rounded-3xl shadow-lg relative overflow-hidden">
+                    <p class="text-[9px] font-bold uppercase text-blue-100">Densidade Exp.</p>
+                    <div class="flex items-baseline gap-1">
+                        <span id="density-val" class="text-3xl font-black text-white">0.000</span>
+                    </div>
+                    <p class="text-[8px] text-blue-200 uppercase font-bold">g/cm³</p>
+                    <i class="fas fa-weight-hanging absolute -right-2 -bottom-2 text-4xl opacity-10"></i>
                 </div>
-                <i class="fas fa-tint absolute -right-2 -bottom-2 text-6xl opacity-20"></i>
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl relative overflow-hidden">
+                    <p class="text-[9px] font-bold uppercase text-slate-500">Confiança Máxima</p>
+                    <div class="flex items-baseline gap-1">
+                        <span id="top-prob-val" class="text-3xl font-black text-green-400">0%</span>
+                    </div>
+                    <p id="top-metal-name" class="text-[8px] text-slate-400 uppercase font-bold truncate">---</p>
+                </div>
             </div>
 
-            <!-- Chart -->
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-[10px] text-slate-500 uppercase mb-4 font-bold text-center">Curva de Probabilidade</p>
-                <div class="h-48">
+            <!-- Curve Chart -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl">
+                <p class="text-[9px] text-slate-500 uppercase mb-4 font-bold tracking-widest text-center">Distribuição de Probabilidade</p>
+                <div class="h-40">
                     <canvas id="probChart"></canvas>
                 </div>
             </div>
 
-            <!-- Ranking -->
-            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <p class="text-[10px] text-slate-500 uppercase mb-4 font-bold">Identificação Provável</p>
-                <div id="ranking-list" class="space-y-3">
+            <!-- Ranking List -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl">
+                <p class="text-[9px] text-slate-500 uppercase mb-4 font-bold">Ranking de Correspondência</p>
+                <div id="ranking-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
                     <!-- JS fills this -->
                 </div>
+            </div>
+
+            <!-- Scatter Plot (O Gráfico que você queria) -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-3xl">
+                <p class="text-[9px] text-slate-500 uppercase mb-4 font-bold text-center">Mapa de Densidade de Metais</p>
+                <div class="h-56">
+                    <canvas id="scatterChart"></canvas>
+                </div>
+                <p class="text-[8px] text-slate-600 mt-2 text-center italic">
+                    A linha vertical representa sua medição. Pontos são metais reais.
+                </p>
             </div>
         </div>
 
         <!-- Initial Placeholder -->
-        <div id="placeholder" class="py-20 text-center border-2 border-dashed border-slate-800 rounded-2xl">
-            <i class="fas fa-balance-scale text-slate-700 text-3xl mb-3"></i>
-            <p class="text-slate-500 text-[10px] uppercase tracking-widest">Aguardando Medições</p>
+        <div id="placeholder" class="py-20 text-center border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/20">
+            <div class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-800">
+                <i class="fas fa-balance-scale text-slate-600 text-xl"></i>
+            </div>
+            <p class="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold">Aguardando Telemetria</p>
+            <p class="text-slate-700 text-[8px] mt-2 px-10 leading-relaxed uppercase italic">Insira o peso no ar e o empuxo para iniciar a análise estatística</p>
         </div>
 
     </main>
 
     <script>
         const METALS_DB = [
-            { name: 'Alumínio', density: 2.70, color: '#94a3b8' },
-            { name: 'Titânio', density: 4.54, color: '#64748b' },
-            { name: 'Ferro', density: 7.87, color: '#b45309' },
+            { name: 'Magnésio', density: 1.74, color: '#94a3b8' },
+            { name: 'Alumínio', density: 2.70, color: '#38bdf8' },
+            { name: 'Titânio', density: 4.54, color: '#818cf8' },
+            { name: 'Zinco', density: 7.14, color: '#94a3b8' },
+            { name: 'Estanho', density: 7.31, color: '#64748b' },
+            { name: 'Ferro', density: 7.87, color: '#f97316' },
             { name: 'Aço', density: 8.00, color: '#78350f' },
-            { name: 'Latão', density: 8.50, color: '#ca8a04' },
-            { name: 'Cobre', density: 8.96, color: '#ea580c' },
+            { name: 'Latão', density: 8.50, color: '#eab308' },
+            { name: 'Cobre', density: 8.96, color: '#f97316' },
             { name: 'Prata', density: 10.49, color: '#cbd5e1' },
-            { name: 'Chumbo', density: 11.34, color: '#1e293b' },
+            { name: 'Chumbo', density: 11.34, color: '#475569' },
             { name: 'Ouro', density: 19.32, color: '#fbbf24' },
             { name: 'Platina', density: 21.45, color: '#f8fafc' }
         ];
 
-        let myChart = null;
+        let probChart = null;
+        let scatterChart = null;
 
+        // Função de Densidade de Probabilidade (Distribuição Normal)
         function getProb(x, mean, std) {
             return (1 / (std * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / std, 2));
         }
@@ -140,10 +182,12 @@
             document.getElementById('results-area').classList.remove('hidden');
             document.getElementById('placeholder').classList.add('hidden');
 
+            // CÁLCULO FÍSICO (Princípio de Arquimedes)
+            // Densidade Experimental = Peso Ar / Empuxo (Peso da água deslocada)
             const densityExp = air / water;
             document.getElementById('density-val').innerText = densityExp.toFixed(3);
 
-            // Calculate Matches
+            // Cálculo das Probabilidades Relativas
             const chances = METALS_DB.map(m => {
                 const p = getProb(m.density, densityExp, precision);
                 return { ...m, probRaw: p };
@@ -155,45 +199,50 @@
                 chance: sumProb > 0 ? (m.probRaw / sumProb) * 100 : 0
             })).sort((a, b) => b.chance - a.chance);
 
-            // Update List
+            // Atualiza Top Match
+            document.getElementById('top-prob-val').innerText = normalized[0].chance.toFixed(1) + '%';
+            document.getElementById('top-metal-name').innerText = normalized[0].name;
+
+            // Atualiza Lista (Ranking)
             const list = document.getElementById('ranking-list');
             list.innerHTML = '';
-            normalized.filter(m => m.chance > 0.5).slice(0, 5).forEach(m => {
+            normalized.filter(m => m.chance > 0.1).forEach(m => {
                 const div = document.createElement('div');
-                div.className = "flex items-center gap-3 bg-black/40 p-3 rounded-lg border border-slate-800";
+                div.className = "flex items-center gap-3 bg-black/40 p-2.5 rounded-xl border border-slate-800";
                 div.innerHTML = `
-                    <div class="w-1 h-8 rounded" style="background:${m.color}"></div>
+                    <div class="w-1 h-6 rounded" style="background:${m.color}"></div>
                     <div class="flex-1">
-                        <div class="flex justify-between text-[10px] font-bold text-white uppercase">
+                        <div class="flex justify-between text-[9px] font-bold text-white uppercase mb-1">
                             <span>${m.name}</span>
-                            <span class="text-blue-400">${m.chance.toFixed(1)}%</span>
+                            <span class="text-blue-400 font-mono">${m.chance.toFixed(1)}%</span>
                         </div>
-                        <div class="w-full bg-slate-800 h-1 mt-1 rounded-full overflow-hidden">
-                            <div class="h-full bg-blue-500" style="width: ${m.chance}%"></div>
+                        <div class="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+                            <div class="h-full bg-blue-500 transition-all duration-500" style="width: ${m.chance}%"></div>
                         </div>
                     </div>
                 `;
                 list.appendChild(div);
             });
 
-            // Update Chart
-            const labels = [];
-            const data = [];
-            for(let i = densityExp - 3; i <= densityExp + 3; i += 0.1) {
-                labels.push(i.toFixed(1));
-                data.push(getProb(i, densityExp, precision));
+            // --- GRÁFICO DE CURVA (PROBABILIDADE) ---
+            const curveLabels = [];
+            const curveData = [];
+            const startX = Math.max(0, densityExp - 4);
+            const endX = densityExp + 4;
+            for(let i = startX; i <= endX; i += 0.15) {
+                curveLabels.push(i.toFixed(1));
+                curveData.push(getProb(i, densityExp, precision));
             }
 
-            if (myChart) myChart.destroy();
-            const ctx = document.getElementById('probChart').getContext('2d');
-            myChart = new Chart(ctx, {
+            if (probChart) probChart.destroy();
+            probChart = new Chart(document.getElementById('probChart').getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: curveLabels,
                     datasets: [{
-                        data: data,
+                        data: curveData,
                         borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         fill: true,
                         pointRadius: 0,
                         borderWidth: 2,
@@ -205,10 +254,75 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { ticks: { color: '#475569', size: 8 }, grid: { display: false } },
+                        x: { ticks: { color: '#475569', font: { size: 8 } }, grid: { display: false } },
                         y: { display: false }
                     }
                 }
+            });
+
+            // --- GRÁFICO DE DISPERSÃO (O MAPA DE METAIS) ---
+            const scatterPoints = METALS_DB.map(m => ({
+                x: m.density,
+                y: normalized.find(n => n.name === m.name).chance,
+                name: m.name,
+                color: m.color
+            }));
+
+            if (scatterChart) scatterChart.destroy();
+            scatterChart = new Chart(document.getElementById('scatterChart').getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Metais Conhecidos',
+                        data: scatterPoints,
+                        backgroundColor: scatterPoints.map(p => p.color),
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.raw.name}: ${ctx.raw.x} g/cm³`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Densidade (g/cm³)', color: '#475569', font: { size: 8 } },
+                            ticks: { color: '#475569', font: { size: 8 } },
+                            grid: { color: '#1e293b' },
+                            min: 0,
+                            max: 23
+                        },
+                        y: {
+                            title: { display: true, text: 'Afinidade (%)', color: '#475569', font: { size: 8 } },
+                            ticks: { color: '#475569', font: { size: 8 } },
+                            grid: { color: '#1e293b' },
+                            min: 0
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'verticalLine',
+                    afterDraw: (chart) => {
+                        const ctx = chart.ctx;
+                        const x = chart.scales.x.getPixelForValue(densityExp);
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(x, chart.chartArea.top);
+                        ctx.lineTo(x, chart.chartArea.bottom);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = '#3b82f6';
+                        ctx.setLineDash([5, 5]);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                }]
             });
         }
 
